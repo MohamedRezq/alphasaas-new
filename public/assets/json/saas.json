@@ -1,0 +1,42 @@
+[
+  {
+    "logo": "/assets/img/Intuit_QuickBooks_logo.svg",
+    "title": "Quick Books",
+    "text": "Accounting and finance software",
+    "active": false,
+    "checked": false,
+    "app_id": "1"
+  },
+  {
+    "logo": "/assets/img/zoho-books.png",
+    "title": "Zoho Books",
+    "text": "HR management and employee software",
+    "active": false,
+    "checked": false,
+    "app_id": "2"
+  },
+  {
+    "logo": "/assets/img/zoho-books.png",
+    "title": "Zoho People",
+    "text": "HR management and employee software",
+    "active": false,
+    "checked": false,
+    "app_id": "3"
+  },
+  {
+    "logo": "/assets/img/FreshBooks_logo_(2020).svg",
+    "title": "Jira",
+    "text": "Project management and issue tracking",
+    "active": false,
+    "checked": false,
+    "app_id": "5"
+  },
+  {
+    "logo": "/assets/img/FreshBooks_logo_(2020).svg",
+    "title": "Okta",
+    "text": "Identity and access management software",
+    "active": false,
+    "checked": false,
+    "app_id": "6"
+  }
+]

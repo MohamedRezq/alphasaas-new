@@ -1,0 +1,36 @@
+{
+  "short_name": "alpha",
+  "version": "0.01",
+  "tabs": [
+    {
+      "icon": "/assets/img/icons/house-chimney-blank.svg",
+      "title": "Home",
+      "link": "/dashboard"
+    },
+    {
+      "icon": "/assets/img/icons/application.svg",
+      "title": "Applications",
+      "link": "/dashboard/integrations"
+    },
+    {
+      "icon": "/assets/img/icons/category.svg",
+      "title": "Department",
+      "link": "/dashboard/department"
+    },
+    {
+      "icon": "/assets/img/icons/sync.svg",
+      "title": "Integration",
+      "link": "/dashboard/integrations"
+    },
+    {
+      "icon": "/assets/img/icons/lightbulb-dollar.svg",
+      "title": "Opportunities",
+      "link": "/dashboard/opportunities"
+    },
+    {
+      "icon": "/assets/img/icons/renewable.svg",
+      "title": "Renewal hub",
+      "link": "/dashboard"
+    }
+  ]
+}

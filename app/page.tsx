@@ -1,113 +1,176 @@
-import Image from 'next/image'
+"use client";
+import React, { useEffect } from "react";
+import Image from "next/image";
+//-----> Actions <----------------------------------------------//
+//-----> Utils <----------------------------------------------//
+import { dateFormatter } from "@/utils/dateFormatter";
+//-----> Components <----------------------------------------------//
+import Dropdown from "rc-dropdown";
+//-----> Assets <----------------------------------------------//
+import monthIcon from "@/public/assets/img/icons/month.svg";
+import dropDown from "@/public/assets/img/icons/arrow-down-sign-to-navigate.svg";
+import { DashboardHeader } from "@/components/layouts";
+import CustomDropMenu from "@/components/menus/CustomDropMenu";
+import StatsCard from "@/components/dashboard/cards/HomeStatsCard";
+import { roundNumbers } from "@/utils/roundNumbers";
+import HomeCard from "@/components/dashboard/cards/HomeCard";
+import LineChart from "@/components/dashboard/charts/LineChart";
+import PieChart from "@/components/dashboard/charts/PieChart";
+import { fetchDataPost } from "@/utils/fetchData";
+import ColChart from "@/components/dashboard/charts/ColChart";
+//----------------------------------------------------------------------------------//
+//-----> END OF IMPORTS <-------------------------------------//
+//----------------------------------------------------------------------------------//
+const Home = () => {
+  //-------------------------------------------------------------------------//
+  const INTERVALS = ["Month", "Quarter", "Year"];
+  //-------------------------------------------------------------------------//
+  const date = dateFormatter();
+  let interval: any, user: any;
+  useEffect(() => {
+    interval = sessionStorage.getItem("main_interval") ?? INTERVALS[0];
+    let logged_user = sessionStorage.getItem("user");
+    user = logged_user ? JSON.parse(logged_user) : null;
+  }, []);
 
-export default function Home() {
+  //-------------------------------------------------------------------------//
+  let data: any = [];
+  const requests = [
+    {
+      url: `dashboard/home/get-home-stats`,
+      params: { interval: 0 },
+    },
+    {
+      url: `dashboard/home/get-home-chart-1`,
+      params: { interval: 0 },
+    },
+    {
+      url: `dashboard/home/get-home-chart-2`,
+      params: { interval: 0 },
+    },
+    {
+      url: `dashboard/home/get-home-chart-3`,
+      params: { interval: 0 },
+    },
+  ];
+  requests.forEach(async (req: { url: string; params: object }) => {
+    await fetchDataPost(req.url, req.params).then((apiData) => {
+      if (apiData !== undefined) data = [...data, apiData];
+      else data = [...data, null];
+    });
+  });
+  //-------------------------------------------------------------------------//
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <>
+      <DashboardHeader
+        headerTitle={`Good ${
+          new Date().getHours() >= 12 ? "Evening" : "Morning"
+        }, ${user?.info?.firstName || ""}!`}
+        date={date}
+      />
+      <div className="flex flex-col gap-y-5 w-full">
+        <div className="flex justify-between">
+          <div className="flex w-44 justify-around items-center gap-x-2 text-sm bg-bonjour rounded-[15px] px-5 py-2 text-mineshaft dark:text-white pr-6">
+            <Image src={monthIcon} alt="calendar" />
+            <div className="text-center font-medium text-sm w-40 text-mineshaft">
+              {interval}
+            </div>
+            <Dropdown
+              trigger={["click"]}
+              overlay={
+                <CustomDropMenu
+                  selectedOption={interval}
+                  options={INTERVALS}
+                  setterFunction={(key: string) =>
+                    sessionStorage.setItem("main_interval", key)
+                  }
+                />
+              }
+              animation="slide-up"
+            >
+              <Image
+                src={dropDown}
+                alt="Menu"
+                className="w-[10px] h-[6px] cursor-pointer"
+              />
+            </Dropdown>
+          </div>
+          {/* <div
+            onClick={() => {
+              const appIds = user?.info?.applications?.map(
+                (app: any) => app.application_id
+              );
+              syncUserData(appIds);
+            }}
+            className=" cursor-pointer hover:underline"
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+            Sync
+          </div> */}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          {data?.at(0)?.map((item: any, i: number) => (
+            <StatsCard
+              key={`${item?.title}-${item?.value}-${i}`}
+              title={item?.title}
+              value={
+                i === 2
+                  ? item?.value >= 1000
+                    ? `$${roundNumbers(item?.value)}`
+                    : `$${item?.value}`
+                  : item?.value
+              }
+              valueType={item?.valueType}
+              subValues={item?.subValues}
             />
-          </a>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-x-3">
+          <div className="lg:col-span-2">
+            <HomeCard
+              title="Spend Summary by department"
+              subTitle="Total Spend"
+              value={data?.at(1)?.value || 0}
+              subValues={data?.at(1)?.subValues || 0}
+              chart={
+                <LineChart
+                  chartSeries={data?.at(1)?.chartSeries}
+                  xData={data?.at(1)?.xData}
+                />
+              }
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <HomeCard
+              title="Top 4 Apps by Spend"
+              subTitle="Total Spend"
+              value={data?.at(2)?.value || 0}
+              subValues={data?.at(2)?.subValues || 0}
+              chart={
+                <PieChart
+                  chartSeries={data?.at(2)?.chartSeries}
+                  xData={data?.at(2)?.xData}
+                />
+              }
+            />
+          </div>
+          <div className="lg:col-span-2">
+            <HomeCard
+              title="License Summary"
+              subTitle="Total Wasted Value"
+              value={data?.at(3)?.value || 0}
+              subValues={data?.at(3)?.subValues || 0}
+              chart={
+                <ColChart
+                  chartSeries={data?.at(3)?.chartSeries}
+                  xData={data?.at(3)?.xData}
+                />
+              }
+            />
+          </div>
         </div>
       </div>
+    </>
+  );
+};
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
-}
+export default Home;
